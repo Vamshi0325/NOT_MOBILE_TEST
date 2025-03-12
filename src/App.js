@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import "./App.css";
 import NotMobileDevice from "./components/NotMobileDevice";
 
 function App() {
@@ -6,6 +7,14 @@ function App() {
   const [isMobile, setIsMobile] = useState(null);
 
   useEffect(() => {
+    if (window.Telegram && window.Telegram.WebApp) {
+      console.log("Telegram WebApp is available");
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    } else {
+      console.log("Telegram WebApp is not available");
+    }
+
     const detectDevTools = () => {
       const widthThreshold = window.outerWidth - window.innerWidth > 160;
       const heightThreshold = window.outerHeight - window.innerHeight > 160;
@@ -14,7 +23,7 @@ function App() {
       const devtoolsCheck = () => {
         const start = performance.now();
         setTimeout(() => {
-          debugger; // Execution delay if DevTools is open
+          // debugger; // Execution delay if DevTools is open
           const duration = performance.now() - start;
           if (duration > 100) {
             devtoolsOpened = true;

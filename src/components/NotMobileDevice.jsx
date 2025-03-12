@@ -11,8 +11,7 @@ const NotMobileDevice = () => {
         justifyContent: "center",
         alignItems: "center",
         height: "100vh",
-        width: "100%",
-        padding: "10px",
+        width: "100vw",
       }}
     >
       <img
@@ -37,10 +36,9 @@ const NotMobileDevice = () => {
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
           animation: "shine 3s linear infinite",
-          filter: "drop-shadow(black 2px 2px 10px)",
         }}
       >
-        @TEST BOT 6
+        @TEST BOT 20
       </h1>
       <style>
         {`
