@@ -5,44 +5,53 @@ function App() {
   const [isDevToolsOpen, setIsDevToolsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(null);
 
-  // Function to detect if DevTools is open
-  const detectDevTools = () => {
-    // Detects if window size is manipulated (DevTools side panel opened)
-    const widthThreshold = window.outerWidth - window.innerWidth > 160;
-    const heightThreshold = window.outerHeight - window.innerHeight > 160;
+  useEffect(() => {
+    const detectDevTools = () => {
+      const widthThreshold = window.outerWidth - window.innerWidth > 160;
+      const heightThreshold = window.outerHeight - window.innerHeight > 160;
 
-    // Debugger detection trick
-    let opened = false;
-    const devtoolsCheck = () => {
-      const start = performance.now();
-      setTimeout(() => {
-        debugger; // Execution takes longer if DevTools is open
-        const duration = performance.now() - start;
-        if (duration > 100) {
-          opened = true;
-          setIsDevToolsOpen(true);
-        }
-      }, 0);
+      let devtoolsOpened = false;
+      const devtoolsCheck = () => {
+        const start = performance.now();
+        setTimeout(() => {
+          debugger; // Execution delay if DevTools is open
+          const duration = performance.now() - start;
+          if (duration > 100) {
+            devtoolsOpened = true;
+          }
+        }, 0);
+      };
+      devtoolsCheck();
+
+      if (widthThreshold || heightThreshold || devtoolsOpened) {
+        sessionStorage.setItem("devToolsOpen", "true"); // Prevent removal bypass
+        setIsDevToolsOpen(true);
+      }
     };
-    devtoolsCheck();
 
-    if (widthThreshold || heightThreshold || opened) {
+    // Run detection every 500ms
+    const interval = setInterval(() => {
+      detectDevTools();
+
+      // If user removes sessionStorage, reapply the block
+      if (!sessionStorage.getItem("devToolsOpen") && isDevToolsOpen) {
+        sessionStorage.setItem("devToolsOpen", "true");
+      }
+    }, 500);
+
+    // Check DevTools from previous session
+    if (sessionStorage.getItem("devToolsOpen") === "true") {
       setIsDevToolsOpen(true);
     }
-  };
 
-  useEffect(() => {
-    // Check DevTools status every 500ms
-    const interval = setInterval(detectDevTools, 500);
-
-    // Detect if the device is mobile
+    // Detect mobile device
     const mobile = /Android|iPhone/i.test(navigator.userAgent);
     setIsMobile(mobile);
 
-    return () => clearInterval(interval); // Cleanup interval
-  }, []);
+    return () => clearInterval(interval);
+  }, [isDevToolsOpen]);
 
-  // If DevTools is open or it's not a mobile device, show NotMobileDevice
+  // Block UI if DevTools is open or device is not mobile
   if (isDevToolsOpen || isMobile === false) {
     return <NotMobileDevice />;
   }
