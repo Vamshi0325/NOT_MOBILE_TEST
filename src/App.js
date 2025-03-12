@@ -195,8 +195,9 @@ import "./App.css";
 import NotMobileDevice from "./components/NotMobileDevice";
 
 function App() {
-  const [isDevToolsOpen, setIsDevToolsOpen] = useState(null);
-  const [isMobile, setIsMobile] = useState(null);
+  const [isDevToolsOpen, setIsDevToolsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [checkComplete, setCheckComplete] = useState(false);
 
   useEffect(() => {
     if (window.Telegram && window.Telegram.WebApp) {
@@ -204,17 +205,16 @@ function App() {
       window.Telegram.WebApp.expand();
     }
 
-    // ** Improved Mobile Detection **
+    // ** Detect Mobile Device Correctly **
     const checkIfMobile = () => {
       return (
-        "ontouchstart" in window || // Detects touch devices
-        navigator.maxTouchPoints > 0 || // Detects modern mobile browsers
-        /Android|iPhone/i.test(navigator.userAgent) // Checks common mobile user agents
+        /Android|iPhone/i.test(navigator.userAgent) ||
+        ("ontouchstart" in window && navigator.maxTouchPoints > 0)
       );
     };
     setIsMobile(checkIfMobile());
 
-    // ** Detect DevTools **
+    // ** Detect DevTools Open **
     const detectDevTools = () => {
       const threshold = 160;
       const widthThreshold = window.outerWidth - window.innerWidth > threshold;
@@ -224,7 +224,7 @@ function App() {
       let devtoolsOpened = false;
       const devtoolsCheck = () => {
         const start = performance.now();
-        debugger; // This will slow down if DevTools is open
+        debugger; // This will slow down execution if DevTools is open
         const duration = performance.now() - start;
         if (duration > 100) {
           devtoolsOpened = true;
@@ -239,11 +239,11 @@ function App() {
       }
     };
 
-    // Run detection every 500ms
+    // Run DevTools detection every 500ms
     const interval = setInterval(() => {
       detectDevTools();
 
-      // If user removes localStorage or sessionStorage, reapply the block
+      // Restore devToolsOpen flag if removed
       if (
         (!localStorage.getItem("devToolsOpen") ||
           !sessionStorage.getItem("devToolsOpen")) &&
@@ -254,7 +254,7 @@ function App() {
       }
     }, 500);
 
-    // Check DevTools from previous session
+    // Check previous DevTools session
     if (
       localStorage.getItem("devToolsOpen") === "true" ||
       sessionStorage.getItem("devToolsOpen") === "true"
@@ -262,11 +262,14 @@ function App() {
       setIsDevToolsOpen(true);
     }
 
+    // Mark checks as completed
+    setCheckComplete(true);
+
     return () => clearInterval(interval);
   }, [isDevToolsOpen]);
 
-  // ** Wait for Checks to Finish Before Rendering Anything **
-  if (isDevToolsOpen === null || isMobile === null) {
+  // ** Wait for Checks to Complete Before Rendering Anything **
+  if (!checkComplete) {
     return null; // Prevents flickering before checks are done
   }
 
