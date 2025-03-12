@@ -15,6 +15,7 @@ function App() {
       console.log("Telegram WebApp is not available");
     }
 
+    // Function to detect DevTools
     const detectDevTools = () => {
       const widthThreshold = window.outerWidth - window.innerWidth > 160;
       const heightThreshold = window.outerHeight - window.innerHeight > 160;
@@ -23,50 +24,54 @@ function App() {
       const devtoolsCheck = () => {
         const start = performance.now();
         setTimeout(() => {
-          // debugger; // Execution delay if DevTools is open
           const duration = performance.now() - start;
           if (duration > 100) {
             devtoolsOpened = true;
+            setIsDevToolsOpen(true);
+            localStorage.setItem("devToolsOpen", "true");
           }
         }, 0);
       };
       devtoolsCheck();
 
       if (widthThreshold || heightThreshold || devtoolsOpened) {
-        sessionStorage.setItem("devToolsOpen", "true"); // Prevent removal bypass
         setIsDevToolsOpen(true);
+        localStorage.setItem("devToolsOpen", "true");
       }
     };
 
-    // Run detection every 500ms
+    // **Immediate check on page load**
+    detectDevTools();
+
+    // **Run detection every 500ms**
     const interval = setInterval(() => {
       detectDevTools();
 
-      // If user removes sessionStorage, reapply the block
-      if (!sessionStorage.getItem("devToolsOpen") && isDevToolsOpen) {
-        sessionStorage.setItem("devToolsOpen", "true");
+      // If user manually deletes from localStorage, reapply block
+      if (!localStorage.getItem("devToolsOpen") && isDevToolsOpen) {
+        localStorage.setItem("devToolsOpen", "true");
       }
     }, 500);
 
-    // Check DevTools from previous session
-    if (sessionStorage.getItem("devToolsOpen") === "true") {
+    // **Check localStorage on load**
+    if (localStorage.getItem("devToolsOpen") === "true") {
       setIsDevToolsOpen(true);
     }
 
-    // Detect mobile device
+    // **Detect if the user is on a mobile device**
     const mobile = /Android|iPhone/i.test(navigator.userAgent);
     setIsMobile(mobile);
 
     return () => clearInterval(interval);
   }, [isDevToolsOpen]);
 
-  // Block UI if DevTools is open or device is not mobile
+  // If DevTools is open or it's not a mobile device, show <NotMobileDevice />
   if (isDevToolsOpen || isMobile === false) {
     return <NotMobileDevice />;
   }
 
   return (
-    <div>
+    <div style={{ textAlign: "center" }}>
       <h1>Welcome to the Telegram Web App</h1>
       <p>This web app is linked to your Telegram bot.</p>
     </div>
