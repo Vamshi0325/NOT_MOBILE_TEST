@@ -1,59 +1,45 @@
 import React, { useState, useEffect } from "react";
-import "./App.css";
 import NotMobileDevice from "./components/NotMobileDevice";
 
 function App() {
-  const [isDevToolsOpen, setIsDevToolsOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(true);
-  const [isTelegramWebView, setIsTelegramWebView] = useState(false);
+  const [isAllowed, setIsAllowed] = useState(null); // Use null to track loading state
 
   useEffect(() => {
-    // Detect if devtools is open
-    const detectDevTools = () => {
-      const detect = setInterval(() => {
-        const threshold = 160;
-        const widthThreshold =
-          window.outerWidth - window.innerWidth > threshold;
-        const heightThreshold =
-          window.outerHeight - window.innerHeight > threshold;
+    const checkTelegramWebApp = () => {
+      if (typeof window.Telegram !== "undefined" && window.Telegram.WebApp) {
+        // Ensure it's a mobile device
+        const isMobile = /Android|iPhone/i.test(navigator.userAgent);
 
-        let opened = false;
-        const devtoolsCheck = () => {
-          const start = performance.now();
-          debugger;
-          const duration = performance.now() - start;
-          if (duration > 100) {
-            opened = true;
-          }
-        };
-        devtoolsCheck();
-
-        if (widthThreshold || heightThreshold || opened) {
-          setIsDevToolsOpen(true);
-          clearInterval(detect);
+        if (isMobile) {
+          setIsAllowed(true); // Allow access
+        } else {
+          setIsAllowed(false); // Block if not mobile
         }
-      }, 460);
-
-      return () => clearInterval(detect);
+      } else {
+        setIsAllowed(false); // Block if Telegram WebApp is unavailable
+      }
     };
 
-    detectDevTools();
+    // Wait until Telegram script is loaded
+    const interval = setInterval(() => {
+      if (typeof window.Telegram !== "undefined") {
+        clearInterval(interval);
+        checkTelegramWebApp();
+      }
+    }, 200);
+
+    return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    if (isDevToolsOpen === false) {
-      const mobile = /Android|iPhone/i.test(navigator.userAgent);
-      setIsMobile(mobile);
-    }
-  }, [isDevToolsOpen]);
+  if (isAllowed === null) {
+    return (
+      <div style={{ textAlign: "center", padding: "20px", color: "white" }}>
+        Loading...
+      </div>
+    ); // Show loading state
+  }
 
-  useEffect(() => {
-    if (window.Telegram && window.Telegram.WebApp) {
-      setIsTelegramWebView(true);
-    }
-  }, []);
-
-  if (!isTelegramWebView || !isMobile) {
+  if (!isAllowed) {
     return <NotMobileDevice />;
   }
 
