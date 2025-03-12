@@ -8,6 +8,10 @@ function App() {
   const [isMobile, setIsMobile] = useState(null);
 
   useEffect(() => {
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.expand(); // Expand inside Telegram
+    }
+
     // Function to detect DevTools open state
     const detectDevTools = () => {
       const threshold = 160;
