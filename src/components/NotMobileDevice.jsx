@@ -40,7 +40,7 @@ const NotMobileDevice = () => {
           filter: "drop-shadow(black 2px 2px 10px)",
         }}
       >
-        @stringarc8modernbot
+        @TEST_BOT
       </h1>
       <style>
         {`
