@@ -204,9 +204,15 @@ function App() {
       window.Telegram.WebApp.expand();
     }
 
-    // ** Detect Mobile Device First **
-    const mobile = /Android|iPhone/i.test(navigator.userAgent);
-    setIsMobile(mobile);
+    // ** Improved Mobile Detection **
+    const checkIfMobile = () => {
+      return (
+        "ontouchstart" in window || // Detects touch devices
+        navigator.maxTouchPoints > 0 || // Detects modern mobile browsers
+        /Android|iPhone/i.test(navigator.userAgent) // Checks common mobile user agents
+      );
+    };
+    setIsMobile(checkIfMobile());
 
     // ** Detect DevTools **
     const detectDevTools = () => {
@@ -218,7 +224,7 @@ function App() {
       let devtoolsOpened = false;
       const devtoolsCheck = () => {
         const start = performance.now();
-        // debugger; // This will slow down if DevTools is open
+        debugger; // This will slow down if DevTools is open
         const duration = performance.now() - start;
         if (duration > 100) {
           devtoolsOpened = true;
@@ -227,7 +233,8 @@ function App() {
       devtoolsCheck();
 
       if (widthThreshold || heightThreshold || devtoolsOpened) {
-        localStorage.setItem("devToolsOpen", "true"); // Prevent removal bypass
+        localStorage.setItem("devToolsOpen", "true");
+        sessionStorage.setItem("devToolsOpen", "true");
         setIsDevToolsOpen(true);
       }
     };
@@ -236,24 +243,32 @@ function App() {
     const interval = setInterval(() => {
       detectDevTools();
 
-      // If user removes localStorage, reapply the block
-      if (!localStorage.getItem("devToolsOpen") && isDevToolsOpen) {
+      // If user removes localStorage or sessionStorage, reapply the block
+      if (
+        (!localStorage.getItem("devToolsOpen") ||
+          !sessionStorage.getItem("devToolsOpen")) &&
+        isDevToolsOpen
+      ) {
         localStorage.setItem("devToolsOpen", "true");
+        sessionStorage.setItem("devToolsOpen", "true");
       }
     }, 500);
 
     // Check DevTools from previous session
-    if (localStorage.getItem("devToolsOpen") === "true") {
+    if (
+      localStorage.getItem("devToolsOpen") === "true" ||
+      sessionStorage.getItem("devToolsOpen") === "true"
+    ) {
       setIsDevToolsOpen(true);
     }
 
     return () => clearInterval(interval);
   }, [isDevToolsOpen]);
 
-  // // ** Wait for Both Checks to Complete to Avoid Glitch **
-  // if (isDevToolsOpen === null || isMobile === null) {
-  //   return null; // Render nothing until checks are done
-  // }
+  // ** Wait for Checks to Finish Before Rendering Anything **
+  if (isDevToolsOpen === null || isMobile === null) {
+    return null; // Prevents flickering before checks are done
+  }
 
   // ** If DevTools is Open OR Not Mobile, Show NotMobileDevice **
   if (isDevToolsOpen || !isMobile) {
@@ -262,7 +277,7 @@ function App() {
 
   // ** Render UI Only for Mobile Users Without DevTools **
   return (
-    <div>
+    <div className="text-center">
       <h1>Welcome to the Telegram Web App</h1>
       <p>This web app is linked to your Telegram bot.</p>
     </div>
