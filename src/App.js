@@ -250,10 +250,10 @@ function App() {
     return () => clearInterval(interval);
   }, [isDevToolsOpen]);
 
-  // ** Wait for Both Checks to Complete to Avoid Glitch **
-  if (isDevToolsOpen === null || isMobile === null) {
-    return null; // Render nothing until checks are done
-  }
+  // // ** Wait for Both Checks to Complete to Avoid Glitch **
+  // if (isDevToolsOpen === null || isMobile === null) {
+  //   return null; // Render nothing until checks are done
+  // }
 
   // ** If DevTools is Open OR Not Mobile, Show NotMobileDevice **
   if (isDevToolsOpen || !isMobile) {
