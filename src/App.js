@@ -42,7 +42,7 @@ function App() {
   useEffect(() => {
     // Perform mobile check only after devtools check is complete
     if (isDevToolsOpen === false) {
-      const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const mobile = /Android|iPhone/i.test(navigator.userAgent);
       setIsMobile(mobile);
     }
   }, [isDevToolsOpen]);
@@ -62,10 +62,14 @@ function App() {
 
   // Render actual Web App content if checks pass
   return (
-    <div>
-      <h1>Welcome to the Telegram Web App</h1>
-      <p>This web app is linked to your Telegram bot.</p>
-    </div>
+    <>
+      {!isDevToolsOpen && isMobile && (
+        <div>
+          <h1>Welcome to the Telegram Web App</h1>
+          <p>This web app is linked to your Telegram bot.</p>
+        </div>
+      )}
+    </>
   );
 }
 
