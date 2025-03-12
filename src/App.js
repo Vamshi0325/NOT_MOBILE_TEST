@@ -2,68 +2,62 @@ import React, { useState, useEffect } from "react";
 import NotMobileDevice from "./components/NotMobileDevice";
 
 function App() {
-  const [isDevToolsOpen, setIsDevToolsOpen] = useState(null);
   const [isMobile, setIsMobile] = useState(null);
+  const [isDevToolsOpen, setIsDevToolsOpen] = useState(false);
 
   useEffect(() => {
-    // Detect if DevTools is open
+    // Detect if the device is mobile (Android/iPhone)
+    const mobileCheck = () => {
+      const isMobileDevice = /Android|iPhone/i.test(navigator.userAgent);
+      setIsMobile(isMobileDevice);
+    };
+
+    // Detect if Developer Tools is open
     const detectDevTools = () => {
       const threshold = 160;
-      const detect = setInterval(() => {
+      const checkDevTools = () => {
         const widthThreshold =
           window.outerWidth - window.innerWidth > threshold;
         const heightThreshold =
           window.outerHeight - window.innerHeight > threshold;
 
-        // Check for DevTools using debugger timing
-        let opened = false;
+        let devToolsOpened = false;
+
+        // Debugger detection - Delays execution if DevTools is open
         const devtoolsCheck = () => {
           const start = performance.now();
           debugger; // If DevTools is open, execution time increases
           const duration = performance.now() - start;
           if (duration > 100) {
-            opened = true;
+            devToolsOpened = true;
           }
         };
         devtoolsCheck();
 
-        if (widthThreshold || heightThreshold || opened) {
+        if (widthThreshold || heightThreshold || devToolsOpened) {
           setIsDevToolsOpen(true);
-          clearInterval(detect); // Stop checking once detected
         }
-      }, 500);
+      };
 
-      return () => clearInterval(detect); // Cleanup on unmount
+      // Run detection every 500ms
+      const interval = setInterval(checkDevTools, 500);
+
+      return () => clearInterval(interval);
     };
 
+    mobileCheck();
     detectDevTools();
   }, []);
 
-  useEffect(() => {
-    // Perform mobile check only after devtools check is complete
-    if (isDevToolsOpen === false) {
-      const mobile = /Android|iPhone/i.test(navigator.userAgent);
-      setIsMobile(mobile);
-    }
-  }, [isDevToolsOpen]);
-
-  // Wait until checks are complete
-  if (
-    isDevToolsOpen === null ||
-    (isDevToolsOpen === false && isMobile === null)
-  ) {
-    return null; // Prevent flicker by rendering nothing
-  }
-
-  // If DevTools are open or not on mobile, show the "Not Mobile" UI
-  if (isDevToolsOpen || !isMobile) {
+  // If DevTools is open or not a mobile device, show NotMobileDevice
+  if (isDevToolsOpen || isMobile === false) {
     return <NotMobileDevice />;
   }
 
-  // Render actual Web App content if checks pass
+  // Render the Web App UI only on a mobile device and if DevTools is closed
   return (
     <>
-      {!isDevToolsOpen && isMobile && (
+      {isMobile && !isDevToolsOpen && (
         <div>
           <h1>Welcome to the Telegram Web App</h1>
           <p>This web app is linked to your Telegram bot.</p>
